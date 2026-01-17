@@ -1,0 +1,142 @@
+name: "Build Godot Engine & Templates"
+
+on:
+  workflow_dispatch: # Manual trigger to save GitHub Action minutes
+  push:
+    tags:
+      - 'v*' # Trigger when a version tag is pushed (e.g., v1.0.0)
+
+env:
+  # Using a stable version of Godot 4.x
+  GODOT_VERSION: "4.5.1-stable"
+  # SCons cache location
+  SCONS_CACHE: ${{ github.workspace }}/.scons_cache
+  SCONS_CACHE_LIMIT: 4096
+
+jobs:
+  # --- Job 1: Build Linux Editor and Templates ---
+  # We use Ubuntu 22.04 to ensure GLIBC compatibility for most Linux distros
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: "Checkout Godot"
+        uses: actions/checkout@v6
+        with:
+          repository: godotengine/godot
+          ref: ${{ env.GODOT_VERSION }}
+
+      - name: "Checkout Voxel Module"
+        uses: actions/checkout@v4
+        with:
+          repository: Zylann/godot_voxel
+          ref: 'v1,5x'
+          path: modules/voxel
+
+      - name: "Install Linux Dependencies"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            scons \
+            pkg-config \
+            libx11-dev \
+            libxcursor-dev \
+            libxinerama-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            libasound2-dev \
+            libpulse-dev \
+            libudev-dev \
+            libxi-dev \
+            libxrandr-dev \
+            libwayland-dev
+
+      - name: "Setup .NET SDK"
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: "SCons Cache"
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.SCONS_CACHE }}
+          key: ${{ runner.os }}-godot-${{ env.GODOT_VERSION }}-voxel
+
+      # Build Editor for Development
+      - name: "Build Linux Editor"
+        run: |
+          scons platform=linuxbsd target=editor module_mono_enabled=yes production=yes optimize=speed -j2
+          ./bin/godot.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue modules/mono/glue
+          python3 modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin
+
+      # Build Export Template for Players (Release version)
+      - name: "Build Linux Release Template"
+        run: |
+          scons platform=linuxbsd target=template_release module_mono_enabled=yes production=yes optimize=speed -j2
+
+      - name: "Package Artifacts"
+        run: |
+          cd bin
+          tar -czvf godot-linux-editor.tar.gz godot.linuxbsd.editor.x86_64.mono GodotSharp/
+          zip -j linux-template-release.zip godot.linuxbsd.template_release.x86_64.mono
+
+      - name: "Upload Linux Build"
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-builds
+          path: bin/*.tar.gz
+
+      - name: "Upload Linux Templates"
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-templates
+          path: bin/*.zip
+
+  # --- Job 2: Build Windows Templates ---
+  # Building Windows binaries on Windows runners is much more stable for .NET
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: "Checkout Godot"
+        uses: actions/checkout@v6
+        with:
+          repository: godotengine/godot
+          ref: ${{ env.GODOT_VERSION }}
+
+      - name: "Checkout Voxel Module"
+        uses: actions/checkout@v6
+        with:
+          repository: Zylann/godot_voxel
+          ref: 'v1,5x'
+          path: modules/voxel
+
+      - name: "Setup .NET SDK"
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: "Setup Python & SCons"
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: "Install SCons"
+        run: pip install scons
+
+      - name: "SCons Cache"
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.SCONS_CACHE }}
+          key: ${{ runner.os }}-godot-${{ env.GODOT_VERSION }}-voxel
+
+      # We only build templates for Windows here. Use local/Linux build for editing.
+      - name: "Build Windows Templates (Release & Debug)"
+        run: |
+          scons platform=windows target=template_release module_mono_enabled=yes production=yes -j2
+          scons platform=windows target=template_debug module_mono_enabled=yes production=yes -j2
+
+      - name: "Upload Windows Templates"
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-templates
+          path: bin/*.exe
