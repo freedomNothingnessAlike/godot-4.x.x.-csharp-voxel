@@ -75,7 +75,14 @@ jobs:
       # Build Export Template for Players (Release version)
       - name: "Build Linux Release Template"
         run: |
-          scons platform=linuxbsd use_llvm=yes linker=lld target=template_release module_mono_enabled=yes production=yes optimize=speed -j2
+          scons platform=linuxbsd use_llvm=yes linker=lld target=template_release \
+          module_mono_enabled=yes \
+          production=yes \
+          lto=full \
+          optimize=speed \
+          CCFLAGS="-march=x86-64-v3 -fno-math-errno -fstack-protector-strong -fstack-clash-protection -fno-common -D_FORTIFY_SOURCE=2 -fno-plt -ftrivial-auto-var-init=zero -ffile-prefix-map=$(pwd)=." \
+          LINKFLAGS="-Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack" \
+          -j2
 
       - name: "Package Artifacts"
         run: |
