@@ -65,14 +65,14 @@ jobs:
       # Build Editor for Development
       - name: "Build Linux Editor"
         run: |
-          scons platform=linuxbsd target=editor module_mono_enabled=yes production=yes optimize=speed -j2
+          scons platform=linuxbsd use_llvm=yes linker=lld target=editor module_mono_enabled=yes production=yes lto=thin optimize=speed debug_symbols=no -j2
           ./bin/godot.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue modules/mono/glue
           python3 modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin
 
       # Build Export Template for Players (Release version)
       - name: "Build Linux Release Template"
         run: |
-          scons platform=linuxbsd target=template_release module_mono_enabled=yes production=yes optimize=speed -j2
+          scons platform=linuxbsd use_llvm=yes linker=lld target=template_release module_mono_enabled=yes production=yes optimize=speed -j2
 
       - name: "Package Artifacts"
         run: |
