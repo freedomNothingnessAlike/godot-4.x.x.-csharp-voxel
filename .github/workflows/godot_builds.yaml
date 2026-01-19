@@ -78,7 +78,8 @@ jobs:
           scons platform=linuxbsd use_llvm=yes linker=lld target=template_release \
           module_mono_enabled=yes \
           production=yes \
-          lto=full \
+          lto=thin \
+          module_upnp_enabled=no \
           optimize=speed \
           CCFLAGS="-march=x86-64-v3 -fno-math-errno -fstack-protector-strong -fstack-clash-protection -fno-common -D_FORTIFY_SOURCE=2 -fno-plt -ftrivial-auto-var-init=zero -ffile-prefix-map=$(pwd)=." \
           LINKFLAGS="-Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack" \
