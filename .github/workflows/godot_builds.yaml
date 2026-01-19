@@ -50,7 +50,8 @@ jobs:
             libxi-dev \
             libxrandr-dev \
             libwayland-dev \
-            libatomic-ops-dev
+            libatomic-ops-dev \
+            gettext
 
       - name: "Setup .NET SDK"
         uses: actions/setup-dotnet@v5
@@ -67,7 +68,8 @@ jobs:
       - name: "Build Linux Editor"
         run: |
           scons platform=linuxbsd use_llvm=yes linker=lld target=editor module_mono_enabled=yes production=yes lto=thin optimize=speed debug_symbols=no CCFLAGS="-ftrivial-auto-var-init=zero" -j2
-          ./bin/godot.linuxbsd.editor.x86_64.mono --headless --generate-mono-glue modules/mono/glue
+          chmod +x bin/godot.linuxbsd.editor.*
+          ./bin/godot.linuxbsd.editor.* --headless --generate-mono-glue modules/mono/glue
           python3 modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin
 
       # Build Export Template for Players (Release version)
