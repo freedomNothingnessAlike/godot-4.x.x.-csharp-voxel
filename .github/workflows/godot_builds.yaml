@@ -88,8 +88,8 @@ jobs:
       - name: "Package Artifacts"
         run: |
           cd bin
-          tar -czvf godot-linux-editor.tar.gz godot.linuxbsd.editor.x86_64.mono GodotSharp/
-          zip -j linux-template-release.zip godot.linuxbsd.template_release.x86_64.mono
+          tar -czvf godot-linux-editor.tar.gz godot.linuxbsd.editor.x86_64*.mono GodotSharp/
+          zip -j linux-template-release.zip godot.linuxbsd.template_release.x86_64*.mono
 
       - name: "Upload Linux Build"
         uses: actions/upload-artifact@v6
