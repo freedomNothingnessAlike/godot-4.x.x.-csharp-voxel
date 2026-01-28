@@ -51,8 +51,6 @@ jobs:
             libxrandr-dev \
             libwayland-dev \
             libatomic-ops-dev
-          clang --version
-          ld.lld --version
 
       - name: "Setup .NET SDK"
         uses: actions/setup-dotnet@v5
