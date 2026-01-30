@@ -75,7 +75,7 @@ jobs:
       # Build Export Template for Players (Release version)
       - name: "Build Linux Release Template"
         run: |
-          scons platform=linuxbsd use_llvm=yes linker=lld target=template_release x11=no wayland=yes \
+          scons platform=linuxbsd use_llvm=yes linker=lld target=template_release arch=x86_64 x11=no wayland=yes \
           module_mono_enabled=yes \
           production=yes \
           lto=thin \
