@@ -8,7 +8,7 @@ on:
 
 env:
   # Using a stable version of Godot 4.x
-  GODOT_VERSION: "4.6-stable"
+  GODOT_VERSION: "4.5.1-stable"
   # SCons cache location
   SCONS_CACHE: ${{ github.workspace }}/.scons_cache
   SCONS_CACHE_LIMIT: 4096
@@ -67,7 +67,7 @@ jobs:
       # Build Editor for Development
       - name: "Build Linux Editor"
         run: |
-          scons platform=linuxbsd use_llvm=yes linker=lld target=editor module_mono_enabled=yes production=yes lto=thin optimize=speed debug_symbols=no CCFLAGS="-ftrivial-auto-var-init=zero" -j2
+          scons platform=linuxbsd use_llvm=yes linker=lld target=editor x11=no wayland=yes module_mono_enabled=yes production=yes lto=thin optimize=speed debug_symbols=no -j2
           chmod +x bin/godot.linuxbsd.editor.*
           ./bin/godot.linuxbsd.editor.* --headless --generate-mono-glue modules/mono/glue
           python3 modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin
@@ -75,7 +75,7 @@ jobs:
       # Build Export Template for Players (Release version)
       - name: "Build Linux Release Template"
         run: |
-          scons platform=linuxbsd use_llvm=yes linker=lld target=template_release \
+          scons platform=linuxbsd use_llvm=yes linker=lld target=template_release arch=x86_64 x11=no wayland=yes \
           module_mono_enabled=yes \
           production=yes \
           lto=thin \
